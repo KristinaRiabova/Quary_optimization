@@ -1,37 +1,12 @@
-WITH FilteredOrders AS (
-    SELECT 
-        o.order_id, 
-        o.client_id, 
-        o.product_id
-    FROM 
-        orders o
-    JOIN 
-        products p ON o.product_id = p.product_id
-    WHERE 
-        p.product_category = 'Category2'
-),
-FilteredClients AS (
-    SELECT 
-        id, 
-        name, 
-        surname
-    FROM 
-        clients
-    WHERE 
-        status = 'active'
+CREATE INDEX idx_developer ON games(developer_id);
+CREATE INDEX idx_favorite_game ON players(favorite_game_id);
+
+WITH DeveloperGames AS (
+    SELECT g.game_id, g.title, d.name AS developer_name 
+    FROM games g 
+    JOIN developers d ON g.developer_id = d.developer_id
 )
-SELECT 
-    fc.name, 
-    fc.surname, 
-    p.product_name, 
-    COUNT(fo.order_id) AS total_orders
-FROM 
-    FilteredClients fc
-JOIN 
-    FilteredOrders fo ON fc.id = fo.client_id
-JOIN 
-    products p ON fo.product_id = p.product_id
-GROUP BY 
-    fc.id, p.product_id
-ORDER BY 
-    total_orders DESC;
+SELECT p.name, p.age, dg.title, dg.developer_name 
+FROM players p 
+JOIN DeveloperGames dg ON p.favorite_game_id = dg.game_id 
+WHERE p.age > 25;

@@ -1,21 +1,16 @@
 import mysql.connector
-import uuid
 from faker import Faker
 from dotenv import load_dotenv
 import random
-from datetime import datetime, timedelta
 import os
 
-# Load environment variables
 load_dotenv()
 
-# Connection parameters
 HOST = os.getenv('host')
 USER = os.getenv('user')
 PASSWORD = os.getenv('password')
-DATABASE = os.getenv('database')
+DATABASE = 'games_2'  # Set the database name directly
 
-# Connect to the MySQL database
 connection = mysql.connector.connect(
     host=HOST,
     user=USER,
@@ -26,50 +21,53 @@ connection = mysql.connector.connect(
 cursor = connection.cursor()
 fake = Faker()
 
-# Inserting rows into the clients table
-print("Inserting rows into clients...")
-client_insert_query = """
-    INSERT INTO clients (id, name, surname, email, phone, address, status) 
-    VALUES (%s, %s, %s, %s, %s, %s, %s)
+print("Inserting data into developers table...")
+developer_insert_query = """
+    INSERT INTO developers (name, country) 
+    VALUES (%s, %s)
 """
-clients_data = [
-    (str(uuid.uuid4()), fake.first_name(), fake.last_name(), fake.email(), fake.phone_number(), fake.address(), random.choice(['active', 'inactive']))
-    for _ in range(10000)
+developers_data = [
+    (fake.company(), fake.country())
+    for _ in range(100000)
 ]
-cursor.executemany(client_insert_query, clients_data)
-connection.commit()
-print("Inserted into clients.")
+try:
+    cursor.executemany(developer_insert_query, developers_data)
+    connection.commit()
+    print("Data inserted into developers table.")
+except mysql.connector.Error as err:
+    print(f"Error inserting into developers table: {err}")
 
-# Inserting rows into the products table
-print("Inserting rows into products...")
-product_insert_query = """
-    INSERT INTO products (product_name, product_category, description) 
+print("Inserting data into games table...")
+game_insert_query = """
+    INSERT INTO games (title, developer_id, release_year) 
     VALUES (%s, %s, %s)
 """
-categories = ['Category1', 'Category2', 'Category3', 'Category4', 'Category5']
-products_data = [
-    (fake.word(), random.choice(categories), fake.text())
-    for _ in range(10000)
+games_data = [
+    (fake.catch_phrase(), random.randint(1, 100000), random.randint(1990, 2024))
+    for _ in range(1000)
 ]
-cursor.executemany(product_insert_query, products_data)
-connection.commit()
-print("Inserted into products.")
+try:
+    cursor.executemany(game_insert_query, games_data)
+    connection.commit()
+    print("Data inserted into games table.")
+except mysql.connector.Error as err:
+    print(f"Error inserting into games table: {err}")
 
-# Inserting rows into the orders table
-print("Inserting rows into orders...")
-order_insert_query = """
-    INSERT INTO orders (order_date, client_id, product_id) 
+print("Inserting data into players table...")
+player_insert_query = """
+    INSERT INTO players (name, age, favorite_game_id) 
     VALUES (%s, %s, %s)
 """
-order_date_start = datetime.now() - timedelta(days=365 * 5)
-orders_data = [
-    (order_date_start + timedelta(days=random.randint(0, 365 * 5)), random.choice(clients_data)[0], random.randint(1, 10000))
+players_data = [
+    (fake.name(), random.randint(18, 40), random.randint(1, 1000))
     for _ in range(10000)
 ]
-cursor.executemany(order_insert_query, orders_data)
-connection.commit()
-print("Inserted into orders.")
+try:
+    cursor.executemany(player_insert_query, players_data)
+    connection.commit()
+    print("Data inserted into players table.")
+except mysql.connector.Error as err:
+    print(f"Error inserting into players table: {err}")
 
-# Closing the cursor and connection
 cursor.close()
 connection.close()
