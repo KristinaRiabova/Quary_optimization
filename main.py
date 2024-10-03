@@ -44,7 +44,7 @@ game_insert_query = """
 """
 games_data = [
     (fake.catch_phrase(), random.randint(1, 100000), random.randint(1990, 2024))
-    for _ in range(1000)
+    for _ in range(10000)
 ]
 try:
     cursor.executemany(game_insert_query, games_data)
