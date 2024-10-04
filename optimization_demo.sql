@@ -1,33 +1,38 @@
-
 CREATE INDEX idx_game_orders_game_id ON game_orders(game_id);
 CREATE INDEX idx_games_genre ON games(genre);
 CREATE INDEX idx_games_release_year ON games(release_year);
 
 
-WITH order_counts AS (
-    SELECT game_id, COUNT(*) AS cnt
-    FROM game_orders
-    GROUP BY game_id
+ EXPLAIN WITH order_counts AS (
+    SELECT 
+        game_id, 
+        COUNT(*) AS cnt
+    FROM 
+        game_orders
+    GROUP BY 
+        game_id
 ),
-min_max AS (
-    SELECT MIN(cnt) AS min_cnt, MAX(cnt) AS max_cnt
-    FROM order_counts
+ranked_counts AS (
+    SELECT 
+        game_id,
+        cnt,
+        MIN(cnt) OVER () AS min_cnt,
+        MAX(cnt) OVER () AS max_cnt
+    FROM 
+        order_counts
 )
-
 SELECT 
     g.game_name,
     g.genre,
     g.release_year,
-    oc.cnt
+    rc.cnt
 FROM 
-    order_counts oc
+    ranked_counts rc
 JOIN 
-    games g ON oc.game_id = g.game_id
-JOIN 
-    min_max mm ON oc.cnt = mm.min_cnt OR oc.cnt = mm.max_cnt
+    games g ON rc.game_id = g.game_id
 WHERE 
-    g.genre IN ('Action', 'Adventure') 
-    AND g.release_year >= 2010           
+    (rc.cnt = rc.min_cnt OR rc.cnt = rc.max_cnt)
+    AND g.genre IN ('Action', 'Adventure') 
+    AND g.release_year >= 2010
 ORDER BY 
-    oc.cnt;
-
+    rc.cnt;
